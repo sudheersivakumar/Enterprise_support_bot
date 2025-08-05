@@ -1,0 +1,8 @@
+crewai==0.150.0
+langchain==0.3.27
+langchain-core==0.3.72
+langgraph==0.3.0
+langchain-groq==0.3.6
+groq==0.30.0
+flask==3.1.1
+python-dotenv==1.0.1
