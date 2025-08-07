@@ -1,5 +1,6 @@
 from crewai import Agent
 from langchain_groq import ChatGroq  # <-- Use Groq
+from retriever import create_knowledge_base
 import os
 from dotenv import load_dotenv
 
@@ -14,19 +15,21 @@ llm = ChatGroq(
     groq_api_key=os.getenv("GROQ_API_KEY")
 )
 
+# Create retriever
+retriever = create_knowledge_base()
+# agents.py
 researcher = Agent(
     role="Senior Support Researcher",
     goal=(
-        "Conduct a comprehensive and deep search across all knowledge base files to find "
-        "the most accurate, relevant, and up-to-date information to answer the customer query. "
-        "Do not stop at the first result — analyze all documents thoroughly. "
-        "Return only clean, well-structured facts without assumptions or placeholder text."
+        "Search the knowledge base and return ONLY the relevant facts. "
+        "Do NOT draft replies, greetings, or placeholders. "
+        "Return concise, bullet-point style facts that the Resolver can use."
     ),
     backstory=(
-        "You are a meticulous Senior Support Researcher with expertise in information retrieval and data synthesis. "
-        "You are responsible for scanning multiple internal documents — including policies, technical guides, "
-        "and case studies — to extract precise answers. You cross-reference information, prioritize accuracy, "
-        "and ensure no detail is missed. Your summaries are always clear, concise, and directly address the user's question."
+        "You are an expert at searching internal documentation. "
+        "You return only factual summaries — no opinions, no greetings, no filler. "
+        "If the answer is in the knowledge base, extract it verbatim or summarize it precisely. "
+        "If the information is not found, say 'No relevant information found in knowledge base.'"
     ),
     allow_delegation=False,
     verbose=True,
@@ -36,12 +39,12 @@ researcher = Agent(
 # agents.py
 resolver = Agent(
     role="Support Resolver",
-    goal="Draft a clear, helpful, and customer-friendly response based SOLELY on the research findings. NEVER make up information.",
+    goal="Draft a clear, helpful, and customer-friendly response using ONLY the research findings.",
     backstory="""You are a customer support specialist who writes empathetic and accurate replies.
-    You MUST use only the facts provided by the Support Researcher.
-    You MUST NOT say 'I now can give a great answer'.
-    You MUST NOT generate generic templates.
-    You MUST return a complete, ready-to-send email.
+    You use ONLY the facts from the Researcher Agent.
+    You NEVER say 'I now can give a great answer'.
+    You NEVER use placeholders or templates.
+    You return a complete, ready-to-send email.
     """,
     allow_delegation=False,
     verbose=True,
