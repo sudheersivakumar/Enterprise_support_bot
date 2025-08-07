@@ -1,13 +1,28 @@
-# crew.py
+
 from crewai import Crew
 from tasks import research_task, resolve_task, review_task
 from agents import researcher, resolver, reviewer
 import os
 import time
 
-# crew.py
+
 def run_support_crew(customer_query):
-    # Create tasks
+    # ✅ Step 0: Clear old output files
+    output_files = ["resolution_output.txt", "final_response.txt", "research_output.txt"]
+    for file in output_files:
+        if os.path.exists(file):
+            with open(file, "w", encoding="utf-8") as f:
+                f.write("")  # Clear the file
+                
+    # ✅ Clear agent memory before each run
+    for agent in [researcher, resolver, reviewer]:
+        if hasattr(agent, 'memory') and hasattr(agent.memory, 'clear'):
+            agent.memory.clear()
+        if hasattr(agent, 'tools'):
+            for tool in agent.tools:
+                if hasattr(tool, 'clear'):
+                    tool.clear()
+    
     tasks = [
         research_task(customer_query),  # ✅ Pass the query here
         resolve_task(),
@@ -33,10 +48,12 @@ def run_support_crew(customer_query):
     
     # Run the crew
     result = crew.kickoff()
+    
+    
 
     try:
         if hasattr(result, 'final_output') and result.final_output:
-            if "great answer" not in result.final_output and len(result.final_output) > 100:
+            if "great answer" not in result.final_output and "return" not in result.final_output.lower():
                 return result.final_output.strip()
     except:
         pass
